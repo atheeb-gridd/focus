@@ -267,6 +267,15 @@ footer a{color:var(--muted)}
   .facts b{font-size:36px}
   .final{padding:36px 20px;border-radius:20px}
 }
+
+/* photography */
+.photo{margin:0;border-radius:var(--r-lg);overflow:hidden;position:relative;background:var(--panel)}
+.photo img{display:block;width:100%;height:100%;object-fit:cover}
+.mood{margin-top:12px;aspect-ratio:16/7;max-width:100%}
+.mood figcaption{position:absolute;left:40px;bottom:36px;max-width:420px;font:italic 500 clamp(24px,3vw,40px)/1.1 var(--f-serif);color:#fffaf0;text-shadow:0 2px 18px rgba(0,0,0,.35)}
+.pain .photo{aspect-ratio:4/5;margin-top:28px;max-width:440px}
+.final .photo{aspect-ratio:4/3;transform:rotate(1.2deg);box-shadow:0 40px 80px -30px rgba(0,0,0,.6)}
+@media (max-width:600px){.mood{aspect-ratio:4/3}.mood figcaption{left:20px;bottom:20px;font-size:24px}}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}
 }
@@ -336,6 +345,8 @@ img{max-width:100%}
   <div role="listitem"><b>0</b><span>accounts, uploads or ads</span></div>
 </div>
 
+<figure class="photo mood"><img src="https://d8j0ntlcm91z4.cloudfront.net/user_3CqH8mLJtR2G8Xf9CbScW2wSB4O/hf_20261003_125723_ce4572c1-9934-41dd-a234-010e3149cfdf.png" alt="Someone curled up in an armchair under a blanket, reading a warm-toned book page on a laptop by lamplight" loading="lazy" width="1344" height="752" onerror="this.closest('figure').hidden=true"><figcaption>Made for the evening read.</figcaption></figure>
+
 <!-- 3. PROOF WALL 1 -->
 <section id="clean">
   <div class="eyebrow">Proof, not promises</div>
@@ -376,6 +387,7 @@ img{max-width:100%}
   <div>
     <div class="eyebrow">The old way</div>
     <h2>A bright white PDF viewer was never <em>made for reading a whole book</em></h2>
+    <figure class="photo"><img src="https://d8j0ntlcm91z4.cloudfront.net/user_3CqH8mLJtR2G8Xf9CbScW2wSB4O/hf_20261003_125724_92e75194-81fd-40b2-8cd1-98b9e24b7102.png" alt="A tired reader rubbing their eyes in front of a glaring white laptop screen at night" loading="lazy" width="896" height="1120" onerror="this.closest('figure').hidden=true"></figure>
   </div>
   <div class="letter">
     <p>Dear PDF reader,</p>
@@ -574,15 +586,7 @@ img{max-width:100%}
         <div class="help" id="help" hidden></div>
       </div>
     </div>
-    <div class="win" aria-hidden="true" style="transform:rotate(1.2deg)">
-      <div class="bar"><i></i><i></i><i></i><span class="ttl">Pride and Prejudice · 42%</span></div>
-      <div class="page" style="font-size:15px">
-        <h4>Chapter XXIV</h4>
-        <p>Elizabeth, as they drove along, watched for the first appearance of Pemberley Woods with some perturbation.</p>
-        <p><mark class="hl d2">She had never seen a place for which nature had done more.</mark></p>
-        <div class="sticky" style="margin-left:18px">Re-read this one. Turning point.</div>
-      </div>
-    </div>
+    <figure class="photo"><img src="https://d8j0ntlcm91z4.cloudfront.net/user_3CqH8mLJtR2G8Xf9CbScW2wSB4O/hf_20261003_125724_1546b212-5586-4738-b153-9eb9a3b52068.png" alt="An iPad on a linen blanket showing a warm book page with a highlighted sentence and a sticky note" loading="lazy" width="1168" height="880" onerror="this.closest('figure').hidden=true"></figure>
   </div>
 </section>
 </main>
