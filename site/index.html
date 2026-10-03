@@ -165,7 +165,7 @@ footer{padding:40px 0 60px;text-align:center}
   <details><summary>Does it open Kindle or Apple Books purchases?</summary><p>No. Those files are locked with DRM. FOCUS is for DRM-free files like public domain books, free PDFs and EPUBs, and your own documents.</p></details>
   <details><summary>What about scanned PDFs?</summary><p>A scan is a picture of a page with no text inside, so FOCUS tells you it can't read it. Text recognition is not built in yet.</p></details>
   <details><summary>Where is my library stored?</summary><p>On your device only. Back it up with Export everything whenever you like.</p></details>
-  <details><summary>Why does my computer warn me when I open it?</summary><p>The app is not signed with a paid developer certificate yet, so macOS and Windows ask you to confirm. The steps are below the download button.</p></details>
+  <details><summary>Why does my computer warn me when I open it?</summary><p>The app is not signed with a paid developer certificate yet. On Mac, if it says the app is damaged, run xattr -cr /Applications/FOCUS.app in Terminal once. On Windows, click More info, then Run anyway. Both are explained under the download button.</p></details>
   <details><summary>Are two-column PDFs handled?</summary><p>Mostly. Dense academic layouts can interleave columns, and that is a known limit right now.</p></details>
 </section>
 
@@ -197,7 +197,7 @@ const setBtn = (text, href) => all('.dl').forEach((b) => { b.textContent = text;
 const setMeta = (t) => all('.dl-meta').forEach((m) => (m.textContent = t))
 const setOthers = (h) => all('.dl-others').forEach((m) => (m.innerHTML = h))
 const HELP = {
-  mac: '<b>Installing on Mac.</b> Open the .dmg and drag FOCUS into Applications. First launch: right-click the app, choose Open, then Open again. macOS asks because the app is not signed with a paid Apple certificate yet.',
+  mac: '<b>Installing on Mac.</b> Open the .dmg and drag FOCUS into Applications. If macOS says FOCUS is damaged or can't be verified, that is the missing Apple signature, not a broken file. Open Terminal, paste <code>xattr -cr /Applications/FOCUS.app</code>, press Return, then open FOCUS again. You only do this once.',
   win: '<b>Installing on Windows.</b> Run the installer and click through the wizard. If you see "Windows protected your PC", click More info, then Run anyway. The app is not code-signed yet.',
   ios: '<b>On iPad or iPhone.</b> Open the browser version in Safari, tap Share, then Add to Home Screen. Bring your library over with Export on your computer and Restore backup here.'
 }

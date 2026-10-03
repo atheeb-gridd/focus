@@ -1,6 +1,6 @@
 {
   "name": "focus-reader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Local-first book reader: import free PDFs/EPUBs/TXT, clean extraction, highlights, sticky notes, local search, portable export/import.",
   "main": "electron/main.cjs",
@@ -32,7 +32,10 @@
       "target": [
         "dmg"
       ],
-      "artifactName": "FOCUS-${version}-mac-${arch}.${ext}"
+      "artifactName": "FOCUS-${version}-mac-${arch}.${ext}",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     },
     "dmg": {
       "title": "Install FOCUS"
@@ -62,7 +65,8 @@
         "owner": "atheeb-gridd",
         "repo": "focus"
       }
-    ]
+    ],
+    "afterPack": "scripts/adhoc-sign.cjs"
   },
   "dependencies": {
     "@fontsource/atkinson-hyperlegible": "^5.0.0",
