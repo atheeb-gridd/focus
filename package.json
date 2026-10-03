@@ -1,0 +1,92 @@
+{
+  "name": "focus-reader",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first book reader: import free PDFs/EPUBs/TXT, clean extraction, highlights, sticky notes, local search, portable export/import.",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k \"vite\" \"wait-on http://localhost:5173 && cross-env ELECTRON_DEV=1 electron .\"",
+    "build": "vite build",
+    "start": "vite build && electron .",
+    "build:web": "vite build",
+    "dist": "vite build && electron-builder",
+    "build:site": "node scripts/build-site.mjs",
+    "dist:mac": "vite build && electron-builder --mac --arm64 --x64",
+    "dist:win": "vite build && electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.atheeb.focus",
+    "productName": "FOCUS",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**",
+      "electron/**",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.books",
+      "target": [
+        "dmg"
+      ],
+      "artifactName": "FOCUS-${version}-mac-${arch}.${ext}"
+    },
+    "dmg": {
+      "title": "Install FOCUS"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "FOCUS-${version}-win-setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "FOCUS"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "atheeb-gridd",
+        "repo": "focus"
+      }
+    ]
+  },
+  "dependencies": {
+    "@fontsource/atkinson-hyperlegible": "^5.0.0",
+    "@fontsource/literata": "^5.0.0",
+    "@fontsource/lora": "^5.0.0",
+    "@fontsource/playfair-display": "^5.0.0",
+    "@fontsource/source-serif-4": "^5.0.0",
+    "@huggingface/transformers": "^3.0.0",
+    "idb": "^8.0.0",
+    "jszip": "^3.10.1",
+    "mammoth": "^1.8.0",
+    "pdfjs-dist": "^4.10.38",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "vite": "^5.4.11",
+    "wait-on": "^8.0.1"
+  },
+  "author": "Atheeb",
+  "homepage": "https://github.com/atheeb-gridd/focus"
+}

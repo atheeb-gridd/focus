@@ -1,0 +1,20 @@
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import '@fontsource/literata/400.css'
+import '@fontsource/literata/400-italic.css'
+import '@fontsource/literata/700.css'
+import '@fontsource/atkinson-hyperlegible/400.css'
+import '@fontsource/atkinson-hyperlegible/400-italic.css'
+import '@fontsource/atkinson-hyperlegible/700.css'
+import '@fontsource/source-serif-4/400.css'
+import '@fontsource/source-serif-4/400-italic.css'
+import '@fontsource/source-serif-4/700.css'
+import '@fontsource/lora/400.css'
+import '@fontsource/lora/400-italic.css'
+import '@fontsource/lora/700.css'
+import '@fontsource/playfair-display/800-italic.css'
+import './styles.css'
+import App from './App.jsx'
+
+if(/Mac/.test(navigator.platform)&&navigator.userAgent.includes('Electron'))document.body.classList.add('electron-mac')
+createRoot(document.getElementById('root')).render(<App />)
