@@ -18,6 +18,42 @@ const cyrb53 = (str, seed = 0) => {
 const norm = (s) => s.replace(/\s+/g, ' ').trim()
 const prettyName = (n) => n.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').replace(/\s+/g, ' ').trim()
 
+
+// ---------- covers ----------
+const COVER_W = 320
+const canvasToCover = (src, w, h) => {
+  const k = Math.min(1, COVER_W / w)
+  const c = document.createElement('canvas')
+  c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k))
+  const g = c.getContext('2d')
+  g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height)
+  g.drawImage(src, 0, 0, c.width, c.height)
+  return c.toDataURL('image/jpeg', 0.82)
+}
+async function shrinkBlob(blob) {
+  try {
+    const bmp = await createImageBitmap(blob)
+    const out = canvasToCover(bmp, bmp.width, bmp.height)
+    bmp.close?.()
+    return out
+  } catch { return '' }
+}
+async function pdfCover(pdf) {
+  try {
+    const page = await pdf.getPage(1)
+    const base = page.getViewport({ scale: 1 })
+    const vp = page.getViewport({ scale: (COVER_W * 1.5) / base.width })
+    const c = document.createElement('canvas')
+    c.width = Math.round(vp.width); c.height = Math.round(vp.height)
+    const g = c.getContext('2d')
+    g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height)
+    await page.render({ canvasContext: g, viewport: vp }).promise
+    return canvasToCover(c, c.width, c.height)
+  } catch (e) { console.warn('cover failed', e); return '' }
+}
+const MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp' }
+const cleanTitle = (t) => t.replace(/\s*[\(\[](z-?lib[^)\]]*|libgen[^)\]]*|www\.[^)\]]*|pdfdrive[^)\]]*)[\)\]]/gi, '').replace(/\s+/g, ' ').trim()
+
 // ---------- HTML -> blocks (EPUB, HTML, DOCX) ----------
 const SKIP = new Set(['script', 'style', 'nav', 'noscript', 'svg', 'img', 'head', 'button', 'form'])
 const HEAD = /^h[1-6]$/
@@ -94,8 +130,10 @@ async function fromPdf(file, progress) {
   const meta = await pdf.getMetadata().catch(() => null)
   const t = norm(meta?.info?.Title || '')
   const { blocks, removed } = pagesToBlocks(pages)
+  progress?.('Making cover…')
+  const cover = await pdfCover(pdf)
   return {
-    blocks, removed0: removed,
+    blocks, removed0: removed, cover,
     title: t.length > 3 && !/untitled|\.(docx?|indd|qxd|tex|pmd)$/i.test(t) ? t : '',
     author: norm(meta?.info?.Author || '')
   }
@@ -105,7 +143,7 @@ async function fromEpub(file) {
   const zip = await JSZip.loadAsync(await file.arrayBuffer())
   const read = async (p) => { const f = zip.file(p) || zip.file(decodeURI(p)); return f ? f.async('string') : null }
   const xml = (s) => new DOMParser().parseFromString(s, 'application/xml')
-  let title = '', author = '', files = []
+  let title = '', author = '', files = [], coverPath = ''
   try {
     const container = xml(await read('META-INF/container.xml'))
     const opfPath = container.querySelector('rootfile').getAttribute('full-path')
@@ -115,6 +153,13 @@ async function fromEpub(file) {
     author = norm(opf.getElementsByTagNameNS('*', 'creator')[0]?.textContent || '')
     const manifest = {}
     for (const it of opf.getElementsByTagNameNS('*', 'item')) manifest[it.getAttribute('id')] = it
+    const items = Object.values(manifest)
+    const isImg = (it) => /^image\//.test(it.getAttribute('media-type') || '')
+    const metaCover = [...opf.getElementsByTagNameNS('*', 'meta')].find((m) => m.getAttribute('name') === 'cover')?.getAttribute('content')
+    const ci = items.find((it) => (it.getAttribute('properties') || '').includes('cover-image'))
+      || (metaCover && manifest[metaCover] && isImg(manifest[metaCover]) ? manifest[metaCover] : null)
+      || items.find((it) => isImg(it) && /cover/i.test((it.getAttribute('id') || '') + (it.getAttribute('href') || '')))
+    if (ci) coverPath = dir + ci.getAttribute('href')
     for (const ref of opf.getElementsByTagNameNS('*', 'itemref')) {
       const it = manifest[ref.getAttribute('idref')]
       if (!it) continue
@@ -126,7 +171,14 @@ async function fromEpub(file) {
   if (!files.length) files = Object.keys(zip.files).filter((n) => /\.(x?html?)$/i.test(n)).sort()
   const blocks = []
   for (const f of files) { const h = await read(f); if (h) blocks.push(...htmlToBlocks(h).blocks) }
-  return { blocks, title, author }
+  let cover = ''
+  if (coverPath) {
+    try {
+      const f = zip.file(coverPath) || zip.file(decodeURI(coverPath))
+      if (f) cover = await shrinkBlob(new Blob([await f.async('uint8array')], { type: MIME[coverPath.split('.').pop().toLowerCase()] || 'image/jpeg' }))
+    } catch { /* no cover */ }
+  }
+  return { blocks, title, author, cover }
 }
 
 async function fromDocx(file) {
@@ -159,11 +211,16 @@ export async function importFile(file, progress) {
   const { blocks, removed } = cleanBlocks(r.blocks)
   if (blocks.length < 3) throw new Error('Could not find readable text in this file.')
   const id = cyrb53(blocks.slice(0, 150).map((b) => b.x).join('|') + '#' + blocks.length)
-  if (await getBook(id)) return { id, duplicate: true, title: r.title || prettyName(file.name) }
+  const old = await getBook(id)
+  if (old) {
+    if (!old.cover && r.cover) { await putBook({ ...old, cover: r.cover }, null); return { id, duplicate: true, coverAdded: true, title: old.title } }
+    return { id, duplicate: true, title: old.title }
+  }
   const words = blocks.reduce((n, b) => n + wordCount(b.x), 0)
   const meta = {
     id,
-    title: r.title || prettyName(file.name),
+    title: cleanTitle(r.title || prettyName(file.name)),
+    cover: r.cover || '',
     author: r.author || '',
     format: ext,
     addedAt: Date.now(),

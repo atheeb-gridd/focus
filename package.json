@@ -1,6 +1,6 @@
 {
   "name": "focus-reader",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "private": true,
   "description": "Local-first book reader: import free PDFs/EPUBs/TXT, clean extraction, highlights, sticky notes, local search, portable export/import.",
   "main": "electron/main.cjs",
@@ -30,7 +30,8 @@
     "mac": {
       "category": "public.app-category.books",
       "target": [
-        "dmg"
+        "dmg",
+        "zip"
       ],
       "artifactName": "FOCUS-${version}-mac-${arch}.${ext}",
       "identity": null,

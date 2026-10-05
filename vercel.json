@@ -1,5 +1,5 @@
 {
-  "installCommand": "ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci",
+  "installCommand": "ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm install",
   "buildCommand": "npm run build:site",
   "outputDirectory": "site-dist"
 }

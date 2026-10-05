@@ -5,7 +5,12 @@ import { exportBundle, importBundle } from './lib/portable.js'
 import Reader, { FONTS } from './Reader.jsx'
 import { NotesPage } from './Notes.jsx'
 import Sidebar from './Sidebar.jsx'
+import { useUpdater, UpdateBanner } from './Updater.jsx'
 
+const Cover = ({ b, onClick }) => b.cover
+  ? <img className="cover img" src={b.cover} alt={b.title} onClick={onClick} draggable={false} />
+  : <div className="cover" style={{ '--h': hue(b.id) }} onClick={onClick}>{b.title.slice(0, 2)}</div>
+const kWords = (n) => (n < 1000 ? '<1k' : Math.round(n / 1000) + 'k')
 const hue = (id) => [...id].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7)
 
 export default function App() {
@@ -16,6 +21,7 @@ export default function App() {
   const [jobs, setJobs] = useState([])
   const [drag, setDrag] = useState(false)
   const bookInput = useRef(), restoreInput = useRef()
+  const up = useUpdater()
 
   useEffect(() => { loadSettings().then(setSettings) }, [])
   useEffect(() => {
@@ -53,7 +59,7 @@ export default function App() {
           patchJob(id, { status: `Restored: ${r.addedBooks} new books, ${r.annotations} notes/highlights merged, ${r.updatedProgress} reading positions updated`, done: true })
         } else {
           const r = await importFile(f, (s) => patchJob(id, { status: s }))
-          patchJob(id, { status: r.duplicate ? 'Already in your library' : `Added. Removed ${r.removed} ad/boilerplate lines.`, done: true })
+          patchJob(id, { status: r.duplicate ? (r.coverAdded ? 'Cover added' : 'Already in your library') : `Added. Removed ${r.removed} ad/boilerplate lines.`, done: true })
         }
       } catch (e) {
         console.error(e)
@@ -76,12 +82,14 @@ export default function App() {
       <Sidebar items={[
         { icon: '＋', label: 'Add books', onClick: () => bookInput.current.click() },
         { icon: '⤒', label: 'Restore backup', onClick: () => restoreInput.current.click() },
-        { icon: '⤓', label: 'Export everything', disabled: !books.length, onClick: async () => { const r = await exportBundle(); setJobs((j) => [...j, { id: uid(), name: 'Backup', status: `Exported ${r.books} books, ${r.annotations} notes & highlights`, done: true }]); setTimeout(() => setJobs((j) => j.filter((x) => !x.done)), 6000) } }
+        { icon: '⤓', label: 'Export everything', disabled: !books.length, onClick: async () => { const r = await exportBundle(); setJobs((j) => [...j, { id: uid(), name: 'Backup', status: `Exported ${r.books} books, ${r.annotations} notes & highlights`, done: true }]); setTimeout(() => setJobs((j) => j.filter((x) => !x.done)), 6000) } },
+        ...(up.available ? [{ sep: true }, { icon: '⟳', label: up.label, badge: up.badge, disabled: up.busy, onClick: up.onClick }] : [])
       ]} />
       <input ref={bookInput} type="file" hidden multiple accept={SUPPORTED + ',.json'} onChange={(e) => { onFiles(e.target.files); e.target.value = '' }} />
       <input ref={restoreInput} type="file" hidden accept=".json,application/json" onChange={(e) => { onFiles(e.target.files); e.target.value = '' }} />
       <div className="libmain">
-        <header className="topbar slim"><div className="title"><b>Library</b></div></header>
+        <header className="topbar slim"><div className="title"><b>Library</b>{up.version && <span className="muted small ver"> v{up.version}</span>}</div></header>
+        <UpdateBanner up={up} />
 
       {jobs.length > 0 && (
         <div className="jobs">
@@ -92,7 +100,7 @@ export default function App() {
       <main>
         {last && (
           <section className="continue" onClick={() => setRoute({ name: 'reader', id: last.id })}>
-            <div className="cover" style={{ '--h': hue(last.id) }}>{last.title.slice(0, 2)}</div>
+            <Cover b={last} />
             <div><div className="muted small">Continue reading</div><h2>{last.title}</h2><div className="muted">{Math.round((last.progress.pct || 0) * 100)}% · {last.chapters[last.progress.chapter]?.title}</div></div>
           </section>
         )}
@@ -102,10 +110,10 @@ export default function App() {
           <div className="grid">
             {books.map((b) => (
               <div key={b.id} className="book">
-                <div className="cover" style={{ '--h': hue(b.id) }} onClick={() => setRoute({ name: 'reader', id: b.id })}>{b.title.slice(0, 2)}</div>
+                <Cover b={b} onClick={() => setRoute({ name: 'reader', id: b.id })} />
                 <div className="meta">
                   <b title={b.title} onClick={() => setRoute({ name: 'reader', id: b.id })}>{b.title}</b>
-                  <div className="muted small">{b.author || b.format.toUpperCase()} · {Math.round(b.words / 1000)}k words</div>
+                  <div className="muted small">{b.author || b.format.toUpperCase()} · {kWords(b.words)} words</div>
                   <div className="bar"><i style={{ width: Math.round((b.progress?.pct || 0) * 100) + '%' }} /></div>
                   <div className="row-actions">
                     <button onClick={() => setRoute({ name: 'notes', id: b.id })}>✎ {counts[b.id]?.n || 0} notes · ★ {counts[b.id]?.b || 0}</button>

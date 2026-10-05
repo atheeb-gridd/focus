@@ -1,6 +1,8 @@
 const { app, BrowserWindow, shell, protocol, net } = require('electron')
 const path = require('path')
 const { pathToFileURL } = require('url')
+const updater = require('./updater.cjs')
+let mainWin = null
 
 // Serve the built app from a real origin (app://reader) instead of file:// so that
 // IndexedDB, web workers (pdf.js) and WASM behave exactly like in a browser.
@@ -12,14 +14,17 @@ function create() {
     width: 1280, height: 860, minWidth: 720, minHeight: 520,
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     backgroundColor: '#f7f3ea',
-    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true }
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, preload: path.join(__dirname, 'preload.cjs') }
   })
+  mainWin = win
+  win.on('closed', () => { mainWin = null })
   win.webContents.setWindowOpenHandler(({ url }) => { shell.openExternal(url); return { action: 'deny' } })
   if (process.env.ELECTRON_DEV) win.loadURL('http://localhost:5173')
   else win.loadURL('app://reader/index.html')
 }
 
 app.whenReady().then(() => {
+  updater.register(() => mainWin)
   protocol.handle('app', (req) => {
     let p = decodeURIComponent(new URL(req.url).pathname)
     if (p === '/' || !p) p = '/index.html'
